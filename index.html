@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Malla Curricular - Ingeniería Eléctrica</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9fafb;
+      margin: 0;
+      padding: 1rem;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .malla {
+      display: grid;
+      grid-template-columns: repeat(8, 1fr);
+      gap: 1rem;
+    }
+    .ciclo {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .materia {
+      padding: 0.5rem;
+      border-radius: 0.5rem;
+      border: 2px solid #d1d5db;
+      background: #fff;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.3s;
+      position: relative;
+    }
+    .materia.aprobada {
+      background: #d1fae5;
+      border-color: #10b981;
+      color: #065f46;
+    }
+    .materia.bloqueada {
+      background: #f3f4f6;
+      border-color: #d1d5db;
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+    .materia:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 110%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111827;
+      color: #f9fafb;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      font-size: 0.75rem;
+      white-space: nowrap;
+      display: block;
+      z-index: 10;
+    }
+    .materia:hover::before {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: #111827;
+    }
+  </style>
+</head>
+<body>
+  <h1>Malla Curricular - Ingeniería Eléctrica</h1>
+  <div class="malla" id="malla"></div>
+
+  <script>
+    const materias = [
+      { id: 'MA-1101', nombre: 'Cálculo I', ciclo: 1, requisitos: [] },
+      { id: 'MA-1004', nombre: 'Álgebra Lineal', ciclo: 1, requisitos: [] },
+      { id: 'QU-0100', nombre: 'Química General I', ciclo: 1, requisitos: [] },
+      { id: 'EG-I', nombre: 'Humanidades I', ciclo: 1, requisitos: [] },
+      { id: 'EF', nombre: 'Actividad Deportiva', ciclo: 1, requisitos: [] },
+      { id: 'EG-arte', nombre: 'Curso de Arte', ciclo: 1, requisitos: [] },
+
+      { id: 'MA-1102', nombre: 'Cálculo II', ciclo: 2, requisitos: ['MA-1101'] },
+      { id: 'CI-0202', nombre: 'Informática', ciclo: 2, requisitos: [] },
+      { id: 'FS-0211', nombre: 'Física I', ciclo: 2, requisitos: ['MA-1101'] },
+      { id: 'EG-II', nombre: 'Humanidades II', ciclo: 2, requisitos: ['EG-I'] },
+
+      { id: 'MA-1002', nombre: 'Cálculo III', ciclo: 3, requisitos: ['MA-1102'] },
+      { id: 'MA-1005', nombre: 'Ecuaciones Diferenciales', ciclo: 3, requisitos: ['MA-1102'] },
+      { id: 'FS-0212', nombre: 'Física II', ciclo: 3, requisitos: ['FS-0211', 'MA-1102'] },
+      { id: 'IE-0209', nombre: 'Electrónica I', ciclo: 3, requisitos: ['FS-0211'] },
+
+      { id: 'IM-0207', nombre: 'Mecánica I', ciclo: 4, requisitos: ['FS-0212'] },
+      { id: 'IE-0209b', nombre: 'Circuitos Lineales I', ciclo: 4, requisitos: ['IE-0209'] },
+      { id: 'IE-0247', nombre: 'Señales y Sistemas I', ciclo: 4, requisitos: ['MA-1005'] },
+
+      { id: 'IM-0307', nombre: 'Mecánica II', ciclo: 5, requisitos: ['IM-0207'] },
+      { id: 'IE-0323', nombre: 'Sistemas Digitales I', ciclo: 5, requisitos: [] },
+      { id: 'IE-0347', nombre: 'Señales y Sistemas II', ciclo: 5, requisitos: ['IE-0247'] },
+
+      { id: 'IE-0321', nombre: 'Estructura de Computadoras', ciclo: 6, requisitos: ['IE-0323'] },
+      { id: 'IE-0405', nombre: 'Modelos de Señales y Sistemas', ciclo: 6, requisitos: ['IE-0347'] },
+      { id: 'IE-0406', nombre: 'Máquinas Eléctricas I', ciclo: 6, requisitos: ['IE-0336'] },
+
+      { id: 'IE-0431', nombre: 'Sistemas de Control', ciclo: 7, requisitos: ['IE-0405'] },
+      { id: 'IE-0527', nombre: 'Ing. Comunicaciones', ciclo: 7, requisitos: ['IE-0347'] },
+      { id: 'IE-0501', nombre: 'Ética Profesional', ciclo: 6, requisitos: [] },
+
+      { id: 'IE-0425', nombre: 'Redes de Computadoras', ciclo: 8, requisitos: ['IE-0321'] },
+      { id: 'IE-0501b', nombre: 'Diseño Eléctrico Industrial I', ciclo: 8, requisitos: ['IE-0315'] },
+      { id: 'IE-0499', nombre: 'Proyecto Eléctrico', ciclo: 8, requisitos: ['IE-0431', 'IE-0406'] },
+    ];
+
+    const aprobadas = JSON.parse(localStorage.getItem('materiasAprobadas')) || [];
+
+    function renderMalla() {
+      const contenedor = document.getElementById('malla');
+      contenedor.innerHTML = '';
+
+      for (let ciclo = 1; ciclo <= 8; ciclo++) {
+        const columna = document.createElement('div');
+        columna.classList.add('ciclo');
+
+        materias.filter(m => m.ciclo === ciclo).forEach(materia => {
+          const div = document.createElement('div');
+          div.classList.add('materia');
+
+          const requisitosCumplidos = materia.requisitos.every(req => aprobadas.includes(req));
+          const esAprobada = aprobadas.includes(materia.id);
+
+          if (!requisitosCumplidos && !esAprobada) {
+            div.classList.add('bloqueada');
+            const faltan = materia.requisitos.filter(req => !aprobadas.includes(req));
+            div.setAttribute('data-tooltip', 'Faltan: ' + faltan.join(', '));
+          } else {
+            div.onclick = () => toggleAprobada(materia.id);
+          }
+
+          if (esAprobada) div.classList.add('aprobada');
+
+          div.textContent = materia.nombre;
+          columna.appendChild(div);
+        });
+
+        contenedor.appendChild(columna);
+      }
+    }
+
+    function toggleAprobada(id) {
+      const index = aprobadas.indexOf(id);
+      if (index >= 0) {
+        aprobadas.splice(index, 1);
+      } else {
+        aprobadas.push(id);
+      }
+      localStorage.setItem('materiasAprobadas', JSON.stringify(aprobadas));
+      renderMalla();
+    }
+
+    renderMalla();
+  </script>
+</body>
+</html>
